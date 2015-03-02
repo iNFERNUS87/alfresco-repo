@@ -10,9 +10,7 @@ import javax.xml.ws.BindingProvider;
 
 import org.apache.chemistry.opencmis.client.bindings.CmisBindingFactory;
 import org.apache.chemistry.opencmis.commons.SessionParameter;
-import org.apache.chemistry.opencmis.commons.spi.CmisBinding;
 import org.apache.log4j.Logger;
-import org.smartlabs.core.cmis.messaging.GetFolderTree;
 import org.smartlabs.core.cmis.ws.NavigationService;
 import org.smartlabs.core.cmis.ws.NavigationServicePort;
 import org.smartlabs.core.services.AlfrescoRepoService;
@@ -79,10 +77,10 @@ public class AlfrescoRepoServiceImpl implements AlfrescoRepoService, Serializabl
 		
 		
 
-		CmisBindingFactory factory = CmisBindingFactory.newInstance();
+		/*CmisBindingFactory factory = CmisBindingFactory.newInstance();
 		CmisBinding binding = factory.createCmisWebServicesBinding(parameters);	
 		
-		GetFolderTree folderTree = new GetFolderTree();
+		GetFolderTree folderTree = new GetFolderTree();*/
 
 		
 /*		try {
