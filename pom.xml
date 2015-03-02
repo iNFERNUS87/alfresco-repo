@@ -16,9 +16,10 @@
 		<project.source.version>1.7</project.source.version>
 		<project.target.version>1.7</project.target.version>
 		<project.encoding>UTF-8</project.encoding>
-		<alfresco.repo.url>http://127.0.0.1:8088/alfresco/webdav</alfresco.repo.url>
+		<alfresco.repo.url>http://127.0.0.1:8088/alfresco/cmisws/NavigationService?wsdl</alfresco.repo.url>
 		<spring.version>3.2.3.RELEASE</spring.version>
 		<springsecurity.version>3.1.3.RELEASE</springsecurity.version>
+		<chemistry.version>0.12.0</chemistry.version>
 		<slf4jVersion>1.6.1</slf4jVersion>
 		<maven.test.failure.ignore>true</maven.test.failure.ignore>
 	</properties>
@@ -71,7 +72,7 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
-		
+
 		<resources>
 			<!-- Apply filtering to files matching the following expressions in src/main/resources. -->
 			<resource>
@@ -82,7 +83,7 @@
 				</includes>
 			</resource>
 		</resources>
-		
+
 		<testResources>
 			<!-- Apply filtering to files matching the following expressions in src/test/resources. -->
 			<testResource>
@@ -182,6 +183,13 @@
 				<groupId>com.vaadin</groupId>
 				<artifactId>vaadin-themes</artifactId>
 				<version>${vaadin.version}</version>
+			</dependency>
+
+			<!-- Open CMIS -->
+			<dependency>
+				<groupId>org.apache.chemistry.opencmis</groupId>
+				<artifactId>chemistry-opencmis-client-impl</artifactId>
+				<version>${chemistry.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
