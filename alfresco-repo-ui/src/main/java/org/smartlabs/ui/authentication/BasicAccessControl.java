@@ -1,5 +1,7 @@
 package org.smartlabs.ui.authentication;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
  * Default mock implementation of {@link AccessControl}. This implementation
  * accepts any string as a password, and considers the user "admin" as the only
@@ -9,7 +11,7 @@ public class BasicAccessControl implements AccessControl {
 
     @Override
     public boolean signIn(String username, String password) {
-        if (username == null || username.isEmpty())
+        if (StringUtils.isBlank(username) || StringUtils.isBlank(password))
             return false;
 
         CurrentUser.set(username);

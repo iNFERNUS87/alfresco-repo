@@ -1,18 +1,31 @@
 package org.smartlabs.core.services.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.Serializable;
-import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
-import javax.xml.ws.BindingProvider;
-
-import org.apache.chemistry.opencmis.client.bindings.CmisBindingFactory;
+import org.apache.chemistry.opencmis.client.api.CmisObject;
+import org.apache.chemistry.opencmis.client.api.Document;
+import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
+import org.apache.chemistry.opencmis.client.api.Folder;
+import org.apache.chemistry.opencmis.client.api.Repository;
+import org.apache.chemistry.opencmis.client.api.Session;
+import org.apache.chemistry.opencmis.client.api.Tree;
+import org.apache.chemistry.opencmis.client.runtime.SessionFactoryImpl;
+import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.SessionParameter;
-import org.apache.log4j.Logger;
-import org.smartlabs.core.cmis.ws.NavigationService;
-import org.smartlabs.core.cmis.ws.NavigationServicePort;
+import org.apache.chemistry.opencmis.commons.data.ContentStream;
+import org.apache.chemistry.opencmis.commons.data.RepositoryCapabilities;
+import org.apache.chemistry.opencmis.commons.enums.BindingType;
+import org.apache.chemistry.opencmis.commons.enums.CapabilityContentStreamUpdates;
+import org.apache.chemistry.opencmis.commons.enums.UnfileObject;
+import org.apache.chemistry.opencmis.commons.enums.VersioningState;
+import org.smartlabs.core.exception.RepoServiceException;
 import org.smartlabs.core.services.AlfrescoRepoService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -28,84 +41,139 @@ public class AlfrescoRepoServiceImpl implements AlfrescoRepoService, Serializabl
 	 */
 	private static final long serialVersionUID = -8988579508779851000L;
 
-	@Value("${alfrescoRepoHost}")
-	private String alfrescoRepoHost;
-	
-	private static final String RECEIVE_TIMEOUT = "60000";
+	private static final String READ_TIMEOUT = "60000";
 
 	private static final String CONNECTION_TIMEOUT = "10000";
 
-	private NavigationServicePort navigationServicePort;
-
-	private URL wsdlLocation;
-
-	
-	@Override
-	public boolean login() {
-		
-		return true;
-	}
-
+	@Value("${alfrescoRepoHost}")
+	private String alfrescoRepoHost;
 
 	@Override
-	public String getRepoHost() {
-		return alfrescoRepoHost;
-	}
-
-	@PostConstruct
-	public void postConstruct() {
-		try {
-			wsdlLocation = new URL(alfrescoRepoHost);
-			setNavigationServicePort(new NavigationService(wsdlLocation).getNavigationServicePort());
-		} catch (Exception e) {
-			Logger.getLogger(getClass()).error("Can't initialize web services", e);
-		}
+	public Session login(String user, String password) {
 		Map<String, String> parameters = new HashMap<String, String>();
 
-		parameters.put(SessionParameter.USER, "admin");
-		parameters.put(SessionParameter.PASSWORD, "admin");
+		parameters.put(SessionParameter.USER, user);
+		parameters.put(SessionParameter.PASSWORD, password);
+		parameters.put(SessionParameter.CONNECT_TIMEOUT, CONNECTION_TIMEOUT);
+		parameters.put(SessionParameter.READ_TIMEOUT, READ_TIMEOUT);
+		parameters.put(SessionParameter.ATOMPUB_URL, alfrescoRepoHost);
+		parameters.put(SessionParameter.BINDING_TYPE, BindingType.ATOMPUB.value());
 
-		parameters.put(SessionParameter.WEBSERVICES_REPOSITORY_SERVICE, alfrescoRepoHost);
-		parameters.put(SessionParameter.WEBSERVICES_NAVIGATION_SERVICE, alfrescoRepoHost);
-		parameters.put(SessionParameter.WEBSERVICES_OBJECT_SERVICE, alfrescoRepoHost);
-		parameters.put(SessionParameter.WEBSERVICES_VERSIONING_SERVICE, alfrescoRepoHost);
-		parameters.put(SessionParameter.WEBSERVICES_DISCOVERY_SERVICE, alfrescoRepoHost);
-		parameters.put(SessionParameter.WEBSERVICES_RELATIONSHIP_SERVICE, alfrescoRepoHost);
-		parameters.put(SessionParameter.WEBSERVICES_MULTIFILING_SERVICE, alfrescoRepoHost);
-		parameters.put(SessionParameter.WEBSERVICES_POLICY_SERVICE, alfrescoRepoHost);
-		parameters.put(SessionParameter.WEBSERVICES_ACL_SERVICE, alfrescoRepoHost);
-		
-		
+		SessionFactoryImpl factoryImpl = SessionFactoryImpl.newInstance();
 
-		/*CmisBindingFactory factory = CmisBindingFactory.newInstance();
-		CmisBinding binding = factory.createCmisWebServicesBinding(parameters);	
-		
-		GetFolderTree folderTree = new GetFolderTree();*/
+		List<Repository> repositories = factoryImpl.getRepositories(parameters);
 
-		
-/*		try {
-			GetFolderTreeResponse folderTree2 = getNavigationServicePort().getFolderTree(folderTree);
-		} catch (CmisException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
+		Repository repository = repositories.get(0);
+
+		Session createSession = repository.createSession();
+
+		return createSession;
 	}
-	
-	
 
-	public NavigationServicePort getNavigationServicePort() {
-		if(navigationServicePort == null){
-			NavigationServicePort port = new NavigationService(wsdlLocation).getNavigationServicePort();
-            ((BindingProvider)port).getRequestContext().put("javax.xml.ws.client.connectionTimeout", CONNECTION_TIMEOUT);
-            ((BindingProvider) port).getRequestContext().put("javax.xml.ws.client.receiveTimeout", RECEIVE_TIMEOUT);
-            setNavigationServicePort(port);
+	@Override
+	public List<Tree<FileableCmisObject>> getObjectTreeStructure(Session session, int depth) {
+		List<Tree<FileableCmisObject>> descendants = null;
+		RepositoryCapabilities capabilities = session.getRepositoryInfo().getCapabilities();
+		if (capabilities != null) {
+			if (capabilities.isGetDescendantsSupported()) {
+				return session.getRootFolder().getDescendants(depth);
+			} else if (capabilities.isGetFolderTreeSupported()) {
+				return session.getRootFolder().getFolderTree(depth);
+			}
 		}
-		return navigationServicePort;
+		return descendants;
 	}
 
+	@Override
+	public Folder createNewFolder(Session session, Folder parent, String folderName) {
+		Map<String, String> newFolderProps = new HashMap<String, String>();
+		newFolderProps.put(PropertyIds.OBJECT_TYPE_ID, "cmis:folder");
+		newFolderProps.put(PropertyIds.NAME, folderName);
+		Folder newFolder = parent.createFolder(newFolderProps);
 
-	public void setNavigationServicePort(NavigationServicePort navigationServicePort) {
-		this.navigationServicePort = navigationServicePort;
+		return newFolder;
 	}
 
+	@Override
+	public Document createNewDocument(Session session, Folder parent, String filename, String mimetype, InputStream content) throws IOException {
+
+		ContentStream contentStream = session.getObjectFactory().createContentStream(filename, content.available(), mimetype, content);
+
+		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put(PropertyIds.OBJECT_TYPE_ID, "cmis:document");
+		properties.put(PropertyIds.NAME, filename);
+
+		Document doc = parent.createDocument(properties, contentStream, VersioningState.MAJOR);
+
+		return doc;
+	}
+
+	@Override
+	public ContentStream readDocument(Session session, String documnetID) {
+		Document doc = (Document) session.getObject(documnetID);
+		if (doc != null) {
+			ContentStream contentStream = doc.getContentStream();
+			return contentStream;
+		} else
+			return null;
+	}
+
+	@Override
+	public String readDocumentAsString(ContentStream contentStream) throws IOException {
+		return getContentAsString(contentStream);
+	}
+
+	@Override
+	public Document updateDocument(Session session, String documentId, String mimetype, String fileName, InputStream content) throws IOException, RepoServiceException {
+		Document storedDoc = (Document) session.getObject(documentId);
+
+		Map<String, String> properties = new HashMap<String, String>();
+		properties.put(PropertyIds.NAME, fileName);
+
+		storedDoc.updateProperties(properties, true);
+
+		if (!session.getRepositoryInfo().getCapabilities().getContentStreamUpdatesCapability().equals(CapabilityContentStreamUpdates.ANYTIME)) {
+			throw new RepoServiceException("update without checkout not supported in this repository");
+		}
+
+		ContentStream contentStream = session.getObjectFactory().createContentStream("test3.txt", content.available(), mimetype, content);
+
+		Document updatedDoc = storedDoc.setContentStream(contentStream, true);
+		return updatedDoc;
+
+	}
+
+	@Override
+	public void deleteFolder(Session session, Folder folder) {
+		folder.deleteTree(true, UnfileObject.DELETE, true);
+		//session.delete(folder, true);
+	}
+
+	private String getContentAsString(ContentStream stream) throws IOException {
+		StringBuilder sb = new StringBuilder();
+		Reader reader = new InputStreamReader(stream.getStream(), "UTF-8");
+
+		try {
+			final char[] buffer = new char[4 * 1024];
+			int b;
+			while (true) {
+				b = reader.read(buffer, 0, buffer.length);
+				if (b > 0) {
+					sb.append(buffer, 0, b);
+				} else if (b == -1) {
+					break;
+				}
+			}
+		} finally {
+			reader.close();
+		}
+
+		return sb.toString();
+	}
+
+	@Override
+	public void deleteDocument(Session session, String documnetId) {
+		CmisObject object = session.getObject(documnetId);
+		session.delete(object, true);
+	}
 }

@@ -4,13 +4,12 @@ import java.io.Serializable;
 
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.server.Page;
-import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
+import com.vaadin.ui.CustomLayout;
 import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.PasswordField;
 import com.vaadin.ui.TextField;
@@ -115,13 +114,9 @@ public class LoginScreen extends CssLayout {
     }
 
     private CssLayout buildLoginInformation() {
-        CssLayout loginInformation = new CssLayout();
+    	CssLayout loginInformation = new CssLayout();
+    	loginInformation.addComponent(new CustomLayout("login_info_view"));
         loginInformation.setStyleName("login-information");
-        Label loginInfoText = new Label(
-                "<h1>Login Information</h1>"
-                        + "Log in as &quot;admin&quot; to have full access. Log in with any other username to have read-only access. For all users, any password is fine",
-                ContentMode.HTML);
-        loginInformation.addComponent(loginInfoText);
         return loginInformation;
     }
 

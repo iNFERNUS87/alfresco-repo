@@ -1,11 +1,9 @@
 package org.smartlabs;
 
-import static org.junit.Assert.*;
-
+import org.apache.chemistry.opencmis.client.api.Session;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.smartlabs.core.services.AlfrescoRepoService;
-import org.smartlabs.core.services.Registry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -22,8 +20,10 @@ public class AlfrescoRepoServiceTest {
 	
 	@Test
 	public void testService(){
-		assertTrue("Error Login Repo", repoService.login());
-		assertNotNull(Registry.getAlfrescoRepoService());
+		//assertTrue("Error Login Repo", repoService.login());
+		Session login = repoService.login("admin","admin");
+		
+		repoService.getObjectTreeStructure(login, -1);
 	}
 	
 }

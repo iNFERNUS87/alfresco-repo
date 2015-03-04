@@ -28,7 +28,7 @@ public class Registry implements Serializable {
 	}
 	
 	
-	public static AlfrescoRepoService getAlfrescoRepoService() {
+	public AlfrescoRepoService getAlfrescoRepoService() {
 		return getInstance().alfrescoRepoService;
 	}
 }

@@ -1,9 +1,11 @@
 package org.smartlabs.ui;
 
 import org.smartlabs.MainUI;
+import org.smartlabs.ui.about.AboutView;
 
 import com.vaadin.navigator.Navigator;
 import com.vaadin.navigator.ViewChangeListener;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HorizontalLayout;
 
@@ -13,14 +15,13 @@ import com.vaadin.ui.HorizontalLayout;
  * 
  */
 public class MainScreen extends HorizontalLayout {
-
-
     /**
 	 * 
 	 */
-	private static final long serialVersionUID = 8671797266717072683L;
+	private static final long serialVersionUID = 4214899125467793196L;
+	private Menu menu;
 
-	public MainScreen(MainUI ui) {
+    public MainScreen(MainUI ui) {
 
         setStyleName("main-screen");
 
@@ -30,10 +31,15 @@ public class MainScreen extends HorizontalLayout {
 
         final Navigator navigator = new Navigator(ui, viewContainer);
         navigator.setErrorView(ErrorView.class);
-
+        menu = new Menu(navigator);
+ /*       menu.addView(new SampleCrudView(), SampleCrudView.VIEW_NAME,
+                SampleCrudView.VIEW_NAME, FontAwesome.EDIT);
+*/        menu.addView(new AboutView(), AboutView.VIEW_NAME, AboutView.VIEW_NAME,
+                FontAwesome.INFO_CIRCLE);
 
         navigator.addViewChangeListener(viewChangeListener);
 
+        addComponent(menu);
         addComponent(viewContainer);
         setExpandRatio(viewContainer, 1);
         setSizeFull();
@@ -53,12 +59,10 @@ public class MainScreen extends HorizontalLayout {
             return true;
         }
 
-		@Override
-		public void afterViewChange(ViewChangeEvent event) {
-			// TODO Auto-generated method stub
-			
-		}
-
+        @Override
+        public void afterViewChange(ViewChangeEvent event) {
+            menu.setActiveView(event.getViewName());
+        }
 
     };
 }

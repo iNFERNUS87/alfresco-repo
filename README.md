@@ -28,7 +28,7 @@ Other basic workflow steps:
   - run "mvn install" in parent project
 - developing the application
   - edit code in the ui module
-  - run "mvn jetty:run" in ui module
+  - run "mvn jetty:run" in ui module (run "mvn tomcat7:run" in ui module)
   - open http://localhost:8080/
 - developing the theme
   - run the application as above
