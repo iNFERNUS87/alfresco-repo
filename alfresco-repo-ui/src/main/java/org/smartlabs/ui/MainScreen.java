@@ -2,6 +2,7 @@ package org.smartlabs.ui;
 
 import org.smartlabs.MainUI;
 import org.smartlabs.ui.about.AboutView;
+import org.smartlabs.ui.crud.FolderTreeCrudView;
 
 import com.vaadin.navigator.Navigator;
 import com.vaadin.navigator.ViewChangeListener;
@@ -32,9 +33,9 @@ public class MainScreen extends HorizontalLayout {
         final Navigator navigator = new Navigator(ui, viewContainer);
         navigator.setErrorView(ErrorView.class);
         menu = new Menu(navigator);
- /*       menu.addView(new SampleCrudView(), SampleCrudView.VIEW_NAME,
-                SampleCrudView.VIEW_NAME, FontAwesome.EDIT);
-*/        menu.addView(new AboutView(), AboutView.VIEW_NAME, AboutView.VIEW_NAME,
+        menu.addView(new FolderTreeCrudView(), FolderTreeCrudView.VIEW_NAME,
+        		FolderTreeCrudView.VIEW_NAME, FontAwesome.EDIT);
+        menu.addView(new AboutView(), AboutView.VIEW_NAME, AboutView.VIEW_NAME,
                 FontAwesome.INFO_CIRCLE);
 
         navigator.addViewChangeListener(viewChangeListener);
@@ -43,6 +44,7 @@ public class MainScreen extends HorizontalLayout {
         addComponent(viewContainer);
         setExpandRatio(viewContainer, 1);
         setSizeFull();
+        navigator.navigateTo(FolderTreeCrudView.VIEW_NAME);
     }
 
     // notify the view menu about view changes so that it can display which view
